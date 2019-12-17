@@ -19,7 +19,7 @@ OPTIONS:
     -t, --task <task_id>    Get Specific Task
 ```
 
-## Config File
+### Config File
 
  * In the same directory as your executable.
  * Must be named "config.conf"

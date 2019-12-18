@@ -43,9 +43,11 @@ fn define_usage() -> ArgMatches<'static> {
                 .help("Add comment on a task").requires("task_id"),
         )
         .arg(
-            Arg::with_name("complete")
+            Arg::with_name("finish")
+                .long("finish")
+                .short("f")
                 .takes_value(true)
-                .help("Complete/Uncomplete a Task")
+                .help("Complete/Uncomplete a Task. Accepts true or false")
                 .requires("task_id"),
         )
         .get_matches()
@@ -100,7 +102,7 @@ fn main() {
     if let Some(v) = matches.value_of("note") {
         _jsn.insert("notes", serde_json::to_value(v).unwrap());
     }
-    if let Some(c) = matches.value_of("complete") {
+    if let Some(c) = matches.value_of("finish") {
         let v: bool = c.parse().unwrap();
         _jsn.insert("completed", serde_json::to_value(v).unwrap());
     }

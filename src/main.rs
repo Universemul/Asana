@@ -30,14 +30,20 @@ fn define_usage() -> ArgMatches<'static> {
         )
         .arg(
             Arg::with_name("note")
-                .short("m")
+                .short("n")
                 .long("note")
                 .takes_value(true)
-                .help("Add note on specific task").requires("task_id"),
+                .help("Add note on a task").requires("task_id"),
+        )
+        .arg(
+            Arg::with_name("comment")
+                .short("c")
+                .long("comment")
+                .takes_value(true)
+                .help("Add comment on a task").requires("task_id"),
         )
         .arg(
             Arg::with_name("complete")
-                .short("c")
                 .takes_value(true)
                 .help("Complete/Uncomplete a Task")
                 .requires("task_id"),
@@ -79,7 +85,7 @@ fn main() {
     let conf = parsing_conf().unwrap();
     let api = AsanaApi {
         token: conf["token"].clone(),
-        user_gid: conf["user_gid"].clone(),
+        user_gid: conf["user_gid"]. clone(),
     };
     let matches = define_usage();
     if matches.is_present("tasks") {
@@ -88,6 +94,9 @@ fn main() {
     }
     let mut _jsn: HashMap<&str, serde_json::Value> = HashMap::new();
     let task_id = matches.value_of("task_id").unwrap();
+    if let Some(v) = matches.value_of("comment") {
+        api.add_comment(&task_id, v);
+    }
     if let Some(v) = matches.value_of("note") {
         _jsn.insert("notes", serde_json::to_value(v).unwrap());
     }

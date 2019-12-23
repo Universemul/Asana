@@ -18,15 +18,49 @@ fn define_usage() -> ArgMatches<'static> {
             Arg::with_name("tasks")
                 .long("tasks")
                 .takes_value(false)
-                .help("Get all tasks"),
+                .help("Display all tasks"),
+        )
+        .arg(
+            Arg::with_name("workspaces")
+                .long("workspaces")
+                .takes_value(false)
+                .help("Display all workspace"),
+        )
+        .arg(
+            Arg::with_name("projects")
+                .long("projects")
+                .takes_value(false)
+                .help("Display all Projects"),
+        )
+        .arg(
+            Arg::with_name("users")
+                .long("users")
+                .takes_value(false)
+                .help("Display all users"),
         )
         .arg(
             Arg::with_name("task_id")
                 .short("t")
-                .long("task")
                 .takes_value(true)
-                .help("Get Specific Task")
-                .required_unless("tasks")
+                .help("Specify a task"),
+        )
+        .arg(
+            Arg::with_name("workspace_id")
+                .short("w")
+                .takes_value(true)
+                .help("Specify a workspace"),
+        )
+        .arg(
+            Arg::with_name("assignee")
+                .short("a")
+                .takes_value(true)
+                .help("Assignee to a user"),
+        )
+        .arg(
+            Arg::with_name("project_id")
+                .short("p")
+                .takes_value(true)
+                .help("Specify a project"),
         )
         .arg(
             Arg::with_name("note")
@@ -72,43 +106,73 @@ fn parsing_conf() -> Result<HashMap<String, String>, Error> {
 }
 
 fn display_tasks(api: AsanaApi) -> () {
-    let tasks: models::Tasks = api.get_tasks().unwrap();
-    for tmp in tasks.data.into_iter() {
-        let gid = tmp.gid;
-        match api.get_task(&gid) {
-            Err(e) => println!("error while get user task {}: {}", gid, e),
-            Ok(task) => println!("{}", task),
-        };
-    }
+    let tasks: models::Tasks = api.tasks().unwrap();
+    println!("{}", tasks);
 }
 
+fn display_projects(api: AsanaApi) -> () {
+    let projects: models::Projects = api.projects().unwrap();
+    println!("{}", projects);
+}
+
+fn display_users(api: AsanaApi) -> () {
+    let users: models::Users = api.users().unwrap();
+    println!("{}", users);
+}
+
+fn display_workspaces(api: AsanaApi) -> () {
+    let workspaces: models::Workspaces = api.workspaces().unwrap();
+    println!("{}", workspaces)
+}
 
 fn main() {
     let conf = parsing_conf().unwrap();
-    let api = AsanaApi {
-        token: conf["token"].clone(),
-        user_gid: conf["user_gid"]. clone(),
-    };
     let matches = define_usage();
+    let mut api = AsanaApi::new(&conf["token"], &conf["user_gid"], &conf["workspace"]);
+    if let Some(v) = matches.value_of("workspace") {
+        api.workspace = v
+    }
+    api.project = matches.value_of("project_id");
     if matches.is_present("tasks") {
         display_tasks(api);
         return
     }
+    if matches.is_present("users") {
+        display_users(api);
+        return
+    }
+    if matches.is_present("workspaces") {
+        display_workspaces(api);
+        return
+    }
+    if matches.is_present("projects") {
+        display_projects(api);
+        return
+    }
     let mut _jsn: HashMap<&str, serde_json::Value> = HashMap::new();
-    let task_id = matches.value_of("task_id").unwrap();
+    let task_id = matches.value_of("task_id");
     if let Some(v) = matches.value_of("comment") {
-        api.add_comment(&task_id, v);
+        let result = api.add_comment(task_id, v).unwrap();
+        if !result {
+            println!("Fail to add comment to the task {}", task_id.unwrap());
+        }
     }
     if let Some(v) = matches.value_of("note") {
         _jsn.insert("notes", serde_json::to_value(v).unwrap());
+    }
+    if let Some(v) = matches.value_of("assignee") {
+        _jsn.insert("assignee", serde_json::to_value(v).unwrap());
     }
     if let Some(c) = matches.value_of("finish") {
         let v: bool = c.parse().unwrap();
         _jsn.insert("completed", serde_json::to_value(v).unwrap());
     }
-    let task = match api.update_task(&task_id, _jsn) {
-        Err(e) => panic!("error while get user task {}: {}", task_id, e),
-        Ok(t) => t,
-    };
-    println!("{:?}", task);
+    if !_jsn.is_empty() {
+        match api.update_task(task_id, _jsn) {
+            Err(e) => panic!("error while update Task {}", e),
+            Ok(t) => t,
+        };
+    }
+    let t = api.get_task(task_id).unwrap();
+    println!("{}", t)
 }

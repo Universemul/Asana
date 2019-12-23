@@ -26,13 +26,17 @@ OPTIONS:
  * Must be named "config.conf"
  * `TOKEN`=`your personnal access token`
  * `USER_GID`=`your GID user` => use to get all your tasks
+ * `WORKSPACE`=`WORKSPACE ID` => Define the default workspace. Can be override by --workspace "Id workspace" or -w "id workspace"
  
 ### TODO 
 
  * [OK] Post comment
- * Set a deadline
  * Assigne to someone
  * Create a Task
  * Link to a project
- * View all tasks in a project
+ * [OK] List all workspaces
+ * [OK] List All Projects in workspace
+ * [OK] View all tasks in a project
  * Refacto Api when I have more skills in Rust :D
+ * Set a deadline
+ * Custom Error Message

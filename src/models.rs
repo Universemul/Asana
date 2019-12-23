@@ -10,8 +10,19 @@ pub struct Resource {
     pub resource_type: String,
 }
 
+impl fmt::Display for Resource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} Id: {}",
+            self.resource_type.to_uppercase(),
+            self.name.trim(),
+            self.gid
+        )
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Default)]
-#[allow(dead_code)]
 pub struct Task {
     pub assignee: Option<Resource>,
     assignee_status: Option<String>,
@@ -40,7 +51,6 @@ pub struct Task {
     tags: Vec<Resource>,
     workspace: Resource,
 }
-
 
 impl Task {
     pub fn title(&self) -> &str {
@@ -84,5 +94,53 @@ impl fmt::Display for Task {
 
 #[derive(Deserialize, Debug)]
 pub struct Tasks {
-    pub data: Vec<Resource>,
+    pub data: Vec<Resource>
+}
+
+impl fmt::Display for Tasks {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.data.iter().fold(Ok(()), |result, ws | {
+            result.and_then(|_| writeln!(f, "{}", ws))
+        })
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Workspaces {
+    pub data: Vec<Resource>
+}
+
+impl fmt::Display for Workspaces {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.data.iter().fold(Ok(()), |result, ws | {
+            result.and_then(|_| writeln!(f, "{}", ws))
+        })
+    }
+}
+
+
+#[derive(Deserialize, Debug)]
+pub struct Projects {
+    pub data: Vec<Resource>
+}
+
+impl fmt::Display for Projects {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.data.iter().fold(Ok(()), |result, ws | {
+            result.and_then(|_| writeln!(f, "{}", ws))
+        })
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Users {
+    pub data: Vec<Resource>
+}
+
+impl fmt::Display for Users {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.data.iter().fold(Ok(()), |result, ws | {
+            result.and_then(|_| writeln!(f, "{}", ws))
+        })
+    }
 }

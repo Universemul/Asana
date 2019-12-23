@@ -6,18 +6,24 @@
 asana --help
 
 USAGE:
-    asana [FLAGS] [OPTIONS] --task <task_id>
+    asana [FLAGS] [OPTIONS]
 
 FLAGS:
-    -h, --help       Prints help information
-        --tasks      Get all tasks
-    -V, --version    Prints version information
+    -h, --help          Prints help information
+        --projects      Display all Projects
+        --tasks         Display all tasks
+        --users         Display all users
+    -V, --version       Prints version information
+        --workspaces    Display all workspace
 
 OPTIONS:
+    -a <assignee>              Assignee to a user
     -c, --comment <comment>    Add comment on a task
     -f, --finish <finish>      Complete/Uncomplete a Task. Accepts true or false
     -n, --note <note>          Add note on a task
-    -t, --task <task_id>       Get Specific Task
+    -p <project_id>            Specify a project
+    -t <task_id>               Specify a task
+    -w <workspace_id>          Specify a workspace
 ```
 
 ### Config File
@@ -31,7 +37,8 @@ OPTIONS:
 ### TODO 
 
  * [OK] Post comment
- * Assigne to someone
+ * [OK] Assignee to someone by id
+ * Assignee to someone by name => mapping id name at the beginning
  * Create a Task
  * Link to a project
  * [OK] List all workspaces

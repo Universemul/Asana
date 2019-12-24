@@ -17,7 +17,7 @@ FLAGS:
         --workspaces    Display all workspace
 
 OPTIONS:
-    -a <assignee>              Assignee to a user
+    -a <assignee>              Assignee to a user. Can be Gid or Name
     -c, --comment <comment>    Add comment on a task
     -f, --finish <finish>      Complete/Uncomplete a Task. Accepts true or false
     -n, --note <note>          Add note on a task
@@ -38,12 +38,12 @@ OPTIONS:
 
  * [OK] Post comment
  * [OK] Assignee to someone by id
- * Assignee to someone by name => mapping id name at the beginning
+ * [OK] Assignee to someone by name
  * Create a Task
  * Link to a project
  * [OK] List all workspaces
  * [OK] List All Projects in workspace
  * [OK] View all tasks in a project
- * Refacto Api when I have more skills in Rust :D
+ * Refacto Global
  * Set a deadline
  * Custom Error Message

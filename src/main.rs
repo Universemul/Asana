@@ -83,8 +83,7 @@ fn define_usage() -> ArgMatches<'static> {
                 .takes_value(true)
                 .help("Complete/Uncomplete a Task. Accepts true or false")
                 .requires("task_id"),
-        )
-        .get_matches()
+        ).get_matches()
 }
 
 fn parsing_conf() -> Result<HashMap<String, String>, Error> {
@@ -115,20 +114,21 @@ fn display_projects(api: AsanaApi) -> () {
     println!("{}", projects);
 }
 
-fn display_users(api: AsanaApi) -> () {
-    let users: models::Users = api.users().unwrap();
-    println!("{}", users);
-}
-
 fn display_workspaces(api: AsanaApi) -> () {
     let workspaces: models::Workspaces = api.workspaces().unwrap();
     println!("{}", workspaces)
 }
 
+
 fn main() {
     let conf = parsing_conf().unwrap();
     let matches = define_usage();
     let mut api = AsanaApi::new(&conf["token"], &conf["user_gid"], &conf["workspace"]);
+    let users: models::Users = api.users().unwrap();
+    if matches.args.is_empty() {
+        println!("No args is passed. Please see --help");
+        return
+    }
     if let Some(v) = matches.value_of("workspace") {
         api.workspace = v
     }
@@ -138,7 +138,7 @@ fn main() {
         return
     }
     if matches.is_present("users") {
-        display_users(api);
+        println!("{}", users);
         return
     }
     if matches.is_present("workspaces") {
@@ -161,7 +161,11 @@ fn main() {
         _jsn.insert("notes", serde_json::to_value(v).unwrap());
     }
     if let Some(v) = matches.value_of("assignee") {
-        _jsn.insert("assignee", serde_json::to_value(v).unwrap());
+        let mut real_value = v;
+        if let Some(resource) = users.data.iter().find(|x| x.name == v) {
+            real_value = &resource.gid
+        };
+        _jsn.insert("assignee", serde_json::to_value(real_value).unwrap());
     }
     if let Some(c) = matches.value_of("finish") {
         let v: bool = c.parse().unwrap();
@@ -176,3 +180,26 @@ fn main() {
     let t = api.get_task(task_id).unwrap();
     println!("{}", t)
 }
+
+/*
+use std::io::{self, Write};
+use std::thread;
+use std::time::Duration;
+
+use console::{style, Term};
+
+const RESOURCES: [&str; 4] = ["Tasks", "Projects", "Workspaces", "Users"];
+
+fn welcome(term : &Term) -> io::Result<()> {
+    let term = Term::stdout();
+    term.write_line("Hello ! Welcome in Asana Tool. What ressource do you want to query ?")?;
+    for x in RESOURCES.iter() {
+        term.write_line(&format!("{}", style(x).cyan()))?;
+    }
+    Ok(())
+}
+
+fn main() {
+    let mut term = Term::stdout();
+    welcome(&term).unwrap()
+}*/

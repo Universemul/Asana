@@ -157,6 +157,12 @@ fn main() {
             println!("Fail to add comment to the task {}", task_id.unwrap());
         }
     }
+    if let Some(v) = api.project {
+        let result = api.add_task_to_project(task_id, v).unwrap();
+        if !result {
+            println!("Fail to add project to the task {}", task_id.unwrap());
+        }
+    }
     if let Some(v) = matches.value_of("note") {
         _jsn.insert("notes", serde_json::to_value(v).unwrap());
     }

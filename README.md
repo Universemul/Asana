@@ -40,7 +40,7 @@ OPTIONS:
  * [OK] Assignee to someone by id
  * [OK] Assignee to someone by name
  * Create a Task
- * Link to a project
+ * [OK] Link to a project
  * [OK] List all workspaces
  * [OK] List All Projects in workspace
  * [OK] View all tasks in a project

@@ -210,7 +210,7 @@ fn main() {
         println!("{}", task);
     }
     if matches.is_present("task_id") {
-        let t = api.get_task(task_id).unwrap();
+        let t = api.task(task_id.unwrap()).unwrap();
         println!("{}", t);
     }
 }

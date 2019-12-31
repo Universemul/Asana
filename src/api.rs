@@ -47,13 +47,12 @@ impl<'a> Api<'a> {
         return Ok(response)
     }
 
-    pub fn get_task(&self, task_id: Option<&str>) -> Result<models::Task, reqwest::Error> {
-        task_id.expect("Task id is required");
-        let url = &format!("{}/tasks/{}", Api::BASE_URL, task_id.unwrap());
+    pub fn task(&self, task_id: &str) -> Result<models::Task, reqwest::Error> {
+        let url = &format!("{}/tasks/{}", Api::BASE_URL, task_id);
         let response: HashMap<String, Value> = self.get(url.to_string())?;
         let data = match response.get("data") {
             Some(tmp) => tmp,
-            None => panic!("[GET USER TASK] Task with id {} is not recognized", task_id.unwrap())
+            None => panic!("[GET USER TASK] Task with id {} is not recognized", task_id)
         };
         let result: models::Task = serde_json::from_value(data.to_owned()).unwrap();
         return Ok(result)

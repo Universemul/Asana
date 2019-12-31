@@ -177,8 +177,9 @@ fn main() {
         _jsn.insert("notes", serde_json::to_value(v).unwrap());
     }
     if let Some(v) = matches.value_of("assignee") {
-        if let Some(resource) = users.data.iter().find(|x| x.name == v) {
-             _jsn.insert("assignee", serde_json::to_value(&resource.gid).unwrap());
+        match users.data.iter().find(|x| x.name == v) {
+            Some(resource) => _jsn.insert("assignee", serde_json::to_value(&resource.gid).unwrap()),
+            None => _jsn.insert("assignee", serde_json::to_value(v).unwrap()),
         };
     }
     if let Some(c) = matches.value_of("finish") {
@@ -186,21 +187,21 @@ fn main() {
         _jsn.insert("completed", serde_json::to_value(v).unwrap());
     }
     if let Some(v) = matches.value_of("comment") {
-        let result = api.add_comment(task_id, v).unwrap();
+        let result = api.add_comment(task_id.unwrap(), v).unwrap();
         if !result {
             println!("Fail to add comment to the task {}", task_id.unwrap());
         }
     }
     if matches.is_present("task_id") {
         if let Some(v) = api.project {
-            let result = api.add_task_to_project(task_id, v).unwrap();
+            let result = api.add_task_to_project(task_id.unwrap(), v).unwrap();
             if !result {
                 println!("Fail to add project to the task {}", task_id.unwrap());
             }
         }
     }
     if matches.is_present("update") {
-        match api.update_task(task_id, _jsn.clone()) {
+        match api.update_task(task_id.unwrap(), _jsn.clone()) {
             Err(e) => panic!("error while update Task {}", e),
             Ok(t) => t,
         };

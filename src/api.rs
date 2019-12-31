@@ -25,6 +25,14 @@ impl<'a> Api<'a> {
         }
     }
 
+    fn _build_request(&self, task_id: &str, resource: Option<&str>) -> String {
+        let url = match resource {
+            Some(v) => format!("{}/tasks/{}/{}", Api::BASE_URL, task_id, v).to_owned(),
+            None => format!("{}/tasks/{}", Api::BASE_URL, task_id).to_owned()
+        };
+        url.to_string()
+    }
+
     fn get<T>(&self, url: String) -> Result<T, reqwest::Error> where 
         for<'de> T: serde::Deserialize<'de> {
         let response = Client::new().get(url.as_str()).bearer_auth(&self.token).send()?.json()?;
@@ -46,6 +54,29 @@ impl<'a> Api<'a> {
         let response = Client::new().post(url.as_str()).json(&body).bearer_auth(&self.token).send()?.json()?;
         return Ok(response)
     }
+     
+    pub fn tasks(&self) -> Result<models::Tasks, reqwest::Error>{
+        let mut url = format!("{}/user_task_lists/{}/tasks?completed_since=now", Api::BASE_URL, self.user_gid);
+        if let Some(v) = self.project {
+            url = format!("{}/projects/{}/tasks", Api::BASE_URL, v);
+        }
+        self.get(url.to_string())
+    }
+
+    pub fn projects(&self) -> Result<models::Projects, reqwest::Error>{
+        let url = &format!("{}/projects?workspace={}", Api::BASE_URL, self.workspace);
+        self.get(url.to_string())
+    } 
+
+    pub fn users(&self) -> Result<models::Users, reqwest::Error>{
+        let url = &format!("{}/users?workspace={}", Api::BASE_URL, self.workspace);
+        self.get(url.to_string())
+    } 
+
+    pub fn workspaces(&self) -> Result<models::Workspaces, reqwest::Error>{
+        let url = &format!("{}/workspaces", Api::BASE_URL);
+        self.get(url.to_string())
+    }  
 
     pub fn task(&self, task_id: &str) -> Result<models::Task, reqwest::Error> {
         let url = &format!("{}/tasks/{}", Api::BASE_URL, task_id);
@@ -58,21 +89,12 @@ impl<'a> Api<'a> {
         return Ok(result)
     }
 
-    fn _build_request(&self, task_id: Option<&str>, resource: Option<&str>) -> String {
-        task_id.expect("Task id is required to add a comment");
-        let url = match resource {
-            Some(v) => format!("{}/tasks/{}/{}", Api::BASE_URL, task_id.unwrap(), v).to_owned(),
-            None => format!("{}/tasks/{}", Api::BASE_URL, task_id.unwrap()).to_owned()
-        };
-        url.to_string()
-    }
-
-    pub fn update_task(&self, task_id: Option<&str>, body: HashMap<&str, Value>) -> Result<models::Task, reqwest::Error> {
+    pub fn update_task(&self, task_id: &str, body: HashMap<&str, Value>) -> Result<models::Task, reqwest::Error> {
         let url = self._build_request(task_id, None);
         let response: HashMap<String, Value> = self.put(url, body)?;
         let data = match response.get("data") {
             Some(tmp) => tmp,
-            None => panic!("[UPDATE TASK] Task with id {} is not recognized", task_id.unwrap())
+            None => panic!("[UPDATE TASK] Task with id {} is not recognized", task_id)
         };
         let result: models::Task = serde_json::from_value(data.clone()).unwrap();
         return Ok(result)
@@ -98,7 +120,7 @@ impl<'a> Api<'a> {
         return Ok(result)
     }
 
-    pub fn add_comment(&self, task_id: Option<&str>, comment: &str) -> Result<bool, reqwest::Error> {
+    pub fn add_comment(&self, task_id: &str, comment: &str) -> Result<bool, reqwest::Error> {
         let url = self._build_request(task_id, Some("stories"));
         let mut body: HashMap<&str, Value> = HashMap::new();
         body.insert("text", serde_json::to_value(comment).unwrap());
@@ -109,7 +131,7 @@ impl<'a> Api<'a> {
         })
     }
 
-    pub fn add_task_to_project(&self, task_id: Option<&str>, project_id: &str) -> Result<bool, reqwest::Error> {
+    pub fn add_task_to_project(&self, task_id: &str, project_id: &str) -> Result<bool, reqwest::Error> {
         let url = self._build_request(task_id, Some("addProject"));
         let mut body: HashMap<&str, Value> = HashMap::new();
         body.insert("project", serde_json::to_value(project_id).unwrap());
@@ -119,27 +141,4 @@ impl<'a> Api<'a> {
             None => false
         })
     }
-    
-    pub fn tasks(&self) -> Result<models::Tasks, reqwest::Error>{
-        let mut url = format!("{}/user_task_lists/{}/tasks?completed_since=now", Api::BASE_URL, self.user_gid);
-        if let Some(v) = self.project {
-            url = format!("{}/projects/{}/tasks", Api::BASE_URL, v);
-        }
-        self.get(url.to_string())
-    }
-
-    pub fn projects(&self) -> Result<models::Projects, reqwest::Error>{
-        let url = &format!("{}/projects?workspace={}", Api::BASE_URL, self.workspace);
-        self.get(url.to_string())
-    } 
-
-    pub fn users(&self) -> Result<models::Users, reqwest::Error>{
-        let url = &format!("{}/users?workspace={}", Api::BASE_URL, self.workspace);
-        self.get(url.to_string())
-    } 
-
-    pub fn workspaces(&self) -> Result<models::Workspaces, reqwest::Error>{
-        let url = &format!("{}/workspaces", Api::BASE_URL);
-        self.get(url.to_string())
-    }   
 }

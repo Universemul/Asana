@@ -55,21 +55,21 @@ pub struct Task {
 impl Task {
     pub fn title(&self) -> &str {
         match &self.completed {
-            true => "[COMPLETED] Tache",
-            false => "Tache",
+            true => "[COMPLETED] Task",
+            false => "Task",
         }
     }
 
     pub fn assignee_name(&self) -> &str {
         match &self.assignee {
-            None => "Non Renseigné",
+            None => "Not defined",
             Some(tmp) => tmp.name.as_str(),
         }
     }
 
     pub fn due_date(&self) -> &str {
         match &self.due_at {
-            None => "Non défini",
+            None => "Not defined",
             Some(tmp) => tmp,
         }
     }

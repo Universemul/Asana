@@ -21,6 +21,18 @@ fn define_usage() -> ArgMatches<'static> {
                 .help("Display all tasks"),
         )
         .arg(
+            Arg::with_name("create")
+            .long("create")
+            .takes_value(false)
+            .help("Create a task").requires("name")
+        )
+        .arg(
+            Arg::with_name("update")
+            .long("update")
+            .takes_value(false)
+            .help("Update a task").requires("task_id")
+        )
+        .arg(
             Arg::with_name("workspaces")
                 .long("workspaces")
                 .takes_value(false)
@@ -60,14 +72,20 @@ fn define_usage() -> ArgMatches<'static> {
             Arg::with_name("project_id")
                 .short("p")
                 .takes_value(true)
-                .help("Specify a project"),
+                .help("Specify a project")
         )
         .arg(
             Arg::with_name("note")
                 .short("n")
                 .long("note")
                 .takes_value(true)
-                .help("Add note on a task").requires("task_id"),
+                .help("Add note on a task"),
+        )
+        .arg(
+            Arg::with_name("name")
+                .long("name")
+                .takes_value(true)
+                .help("Add/Change the task's name"),
         )
         .arg(
             Arg::with_name("comment")
@@ -125,6 +143,7 @@ fn main() {
     let matches = define_usage();
     let mut api = AsanaApi::new(&conf["token"], &conf["user_gid"], &conf["workspace"]);
     let users: models::Users = api.users().unwrap();
+
     if matches.args.is_empty() {
         println!("No args is passed. Please see --help");
         return
@@ -151,61 +170,47 @@ fn main() {
     }
     let mut _jsn: HashMap<&str, serde_json::Value> = HashMap::new();
     let task_id = matches.value_of("task_id");
+    if let Some(v) = matches.value_of("name") {
+         _jsn.insert("name", serde_json::to_value(v).unwrap());
+    }
+    if let Some(v) = matches.value_of("note") {
+        _jsn.insert("notes", serde_json::to_value(v).unwrap());
+    }
+    if let Some(v) = matches.value_of("assignee") {
+        if let Some(resource) = users.data.iter().find(|x| x.name == v) {
+             _jsn.insert("assignee", serde_json::to_value(&resource.gid).unwrap());
+        };
+    }
+    if let Some(c) = matches.value_of("finish") {
+        let v: bool = c.parse().unwrap();
+        _jsn.insert("completed", serde_json::to_value(v).unwrap());
+    }
     if let Some(v) = matches.value_of("comment") {
         let result = api.add_comment(task_id, v).unwrap();
         if !result {
             println!("Fail to add comment to the task {}", task_id.unwrap());
         }
     }
-    if let Some(v) = api.project {
-        let result = api.add_task_to_project(task_id, v).unwrap();
-        if !result {
-            println!("Fail to add project to the task {}", task_id.unwrap());
+    if matches.is_present("task_id") {
+        if let Some(v) = api.project {
+            let result = api.add_task_to_project(task_id, v).unwrap();
+            if !result {
+                println!("Fail to add project to the task {}", task_id.unwrap());
+            }
         }
     }
-    if let Some(v) = matches.value_of("note") {
-        _jsn.insert("notes", serde_json::to_value(v).unwrap());
-    }
-    if let Some(v) = matches.value_of("assignee") {
-        let mut real_value = v;
-        if let Some(resource) = users.data.iter().find(|x| x.name == v) {
-            real_value = &resource.gid
-        };
-        _jsn.insert("assignee", serde_json::to_value(real_value).unwrap());
-    }
-    if let Some(c) = matches.value_of("finish") {
-        let v: bool = c.parse().unwrap();
-        _jsn.insert("completed", serde_json::to_value(v).unwrap());
-    }
-    if !_jsn.is_empty() {
-        match api.update_task(task_id, _jsn) {
+    if matches.is_present("update") {
+        match api.update_task(task_id, _jsn.clone()) {
             Err(e) => panic!("error while update Task {}", e),
             Ok(t) => t,
         };
     }
-    let t = api.get_task(task_id).unwrap();
-    println!("{}", t)
-}
-
-/*
-use std::io::{self, Write};
-use std::thread;
-use std::time::Duration;
-
-use console::{style, Term};
-
-const RESOURCES: [&str; 4] = ["Tasks", "Projects", "Workspaces", "Users"];
-
-fn welcome(term : &Term) -> io::Result<()> {
-    let term = Term::stdout();
-    term.write_line("Hello ! Welcome in Asana Tool. What ressource do you want to query ?")?;
-    for x in RESOURCES.iter() {
-        term.write_line(&format!("{}", style(x).cyan()))?;
+    if matches.is_present("create") {
+        let task = api.create_task(matches.value_of("name").unwrap(), _jsn.clone()).unwrap();
+        println!("{}", task);
     }
-    Ok(())
+    if matches.is_present("task_id") {
+        let t = api.get_task(task_id).unwrap();
+        println!("{}", t);
+    }
 }
-
-fn main() {
-    let mut term = Term::stdout();
-    welcome(&term).unwrap()
-}*/

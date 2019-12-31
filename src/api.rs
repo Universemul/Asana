@@ -13,7 +13,6 @@ pub struct Api<'a>{
     pub project: Option<&'a str>
 }
 
-
 impl<'a> Api<'a> {
     const BASE_URL: &'static str = "https://app.asana.com/api/1.0";
 
@@ -80,8 +79,28 @@ impl<'a> Api<'a> {
         return Ok(result)
     }
 
+
+    pub fn create_task(&self, name: &str, data: HashMap<&str, Value>) -> Result<models::Task, reqwest::Error>{
+        let url = format!("{}/tasks", Api::BASE_URL);
+        let mut body: HashMap<&str, Value> = HashMap::new();
+        body.extend(data.into_iter().map(|(k, v)| (k.clone(), v.clone())));
+        body.insert("name", serde_json::to_value(name).unwrap());
+        if let Some(x) = self.project {
+            body.insert("projects", serde_json::json!([x]));
+        };
+        body.insert("workspace", serde_json::to_value(self.workspace).unwrap());
+        
+        let response: HashMap<String, Value> = self.post(url, body)?;
+        let data = match response.get("data") {
+            Some(tmp) => tmp,
+            None => panic!("[CREATE TASK] Cannot create task")
+        };
+        let result: models::Task = serde_json::from_value(data.clone()).unwrap();
+        return Ok(result)
+    }
+
     pub fn add_comment(&self, task_id: Option<&str>, comment: &str) -> Result<bool, reqwest::Error> {
-        let url = self._build_request(task_id, None);
+        let url = self._build_request(task_id, Some("stories"));
         let mut body: HashMap<&str, Value> = HashMap::new();
         body.insert("text", serde_json::to_value(comment).unwrap());
         let response: HashMap<String, Value> = self.post(url, body)?;
@@ -101,8 +120,7 @@ impl<'a> Api<'a> {
             None => false
         })
     }
-
-        
+    
     pub fn tasks(&self) -> Result<models::Tasks, reqwest::Error>{
         let mut url = format!("{}/user_task_lists/{}/tasks?completed_since=now", Api::BASE_URL, self.user_gid);
         if let Some(v) = self.project {

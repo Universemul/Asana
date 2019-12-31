@@ -68,7 +68,7 @@ impl Task {
     }
 
     pub fn due_date(&self) -> &str {
-        match &self.due_at {
+        match &self.due_on {
             None => "Not defined",
             Some(tmp) => tmp,
         }

@@ -21,6 +21,7 @@ FLAGS:
 OPTIONS:
     -a <assignee>              Assignee to a user. Can be a gid or a name (see --users)
     -c, --comment <comment>    Add comment on a task
+    --due_date <due_date>      Set a due date to a task. Must be YYY-MM-DD
     -f, --finish <finish>      Complete/Uncomplete a Task. Accepts true or false
         --name <name>          Add/Change the task's name
     -n, --note <note>          Add note on a task
@@ -48,5 +49,5 @@ OPTIONS:
  * [OK] List All Projects in workspace
  * [OK] View all tasks in a project
  * Refacto Global
- * Set a deadline
+ * [OK] Set a deadline
  * Custom Error Message

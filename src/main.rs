@@ -1,4 +1,7 @@
 extern crate clap;
+extern crate chrono;
+
+use chrono::{NaiveDate};
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -25,6 +28,12 @@ fn define_usage() -> ArgMatches<'static> {
             .long("create")
             .takes_value(false)
             .help("Create a task").requires("name")
+        )
+        .arg(
+            Arg::with_name("due_date")
+            .long("due_date")
+            .takes_value(true)
+            .help("Set a due date to a task. Must be YYY-MM-DD")
         )
         .arg(
             Arg::with_name("update")
@@ -175,6 +184,14 @@ fn main() {
     }
     if let Some(v) = matches.value_of("note") {
         _jsn.insert("notes", serde_json::to_value(v).unwrap());
+    }
+    if let Some(v) = matches.value_of("due_date") {
+        if NaiveDate::parse_from_str(v, "%Y-%m-%d").is_ok() {
+             _jsn.insert("due_on", serde_json::to_value(v).unwrap());
+        }
+        else {
+            panic!("Cannot parse due_date parameter. Please use this format YYYY-MM-DD")
+        } 
     }
     if let Some(v) = matches.value_of("assignee") {
         match users.data.iter().find(|x| x.name == v) {

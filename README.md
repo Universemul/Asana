@@ -19,7 +19,7 @@ FLAGS:
         --workspaces    Display all workspace
 
 OPTIONS:
-    -a <assignee>              Assignee to a user
+    -a <assignee>              Assignee to a user. Can be a gid or a name (see --users)
     -c, --comment <comment>    Add comment on a task
     -f, --finish <finish>      Complete/Uncomplete a Task. Accepts true or false
         --name <name>          Add/Change the task's name

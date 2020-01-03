@@ -48,6 +48,6 @@ OPTIONS:
  * [OK] List all workspaces
  * [OK] List All Projects in workspace
  * [OK] View all tasks in a project
- * Refacto Global
+ * [OK] Refacto Global
  * [OK] Set a deadline
- * Custom Error Message
+ * [OK] Custom Error Message

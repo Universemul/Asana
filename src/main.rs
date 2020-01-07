@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error};
 use clap::{App, Arg, ArgMatches};
 
-use api::{Api as AsanaApi, models};
+use api::{Api as AsanaApi};
 
 fn define_usage() -> ArgMatches<'static> {
     App::new("Asana Awesome Toll")
@@ -158,14 +158,19 @@ fn display_users(api: AsanaApi) -> () {
 }
 
 fn main() {
-    let conf = parsing_conf().unwrap();
+    let conf = parsing_conf().expect("Cannot read config.conf");
+
     let matches = define_usage();
-    let mut api = AsanaApi::new(&conf["token"], &conf["user_gid"]);
-    api.project = matches.value_of("project_id");
+
+    let mut api = AsanaApi::new(conf["token"].to_owned(), conf["user_gid"].to_owned());
+
+    if let Some(v) = matches.value_of("project_id") {
+        api.project = Some(v.to_owned());
+    }
     if matches.is_present("workspace_id") {
-        api.set_workspace(matches.value_of("workspace_id").unwrap());
+        api.set_workspace(matches.value_of("workspace_id").unwrap().to_owned());
     } else {
-        api.set_workspace(&conf["workspace"]);
+        api.set_workspace(conf["workspace"].to_owned());
     }
     let task_id = matches.value_of("task_id");
     if matches.is_present("tasks") {
@@ -208,27 +213,27 @@ fn main() {
         _jsn.insert("completed", serde_json::to_value(v).unwrap());
     }
     if matches.is_present("update") {
-        match api.update_task(task_id.unwrap(), _jsn.clone()) {
+        match api.update_task(task_id.unwrap().to_owned(), _jsn.clone()) {
             Err(e) => println!("{}", e),
             Ok(t) => println!("{}", t),
         };
         return
     }
     if matches.is_present("create") {
-        match api.create_task(matches.value_of("name").unwrap(), _jsn.clone()) {
+        match api.create_task(matches.value_of("name").unwrap().to_owned(), _jsn.clone()) {
             Err(e) => println!("{}", e),
             Ok(t) => println!("{}", t),
         };
     }
     if let Some(v) = matches.value_of("comment") {
-        match api.add_comment(task_id.unwrap(), v) {
+        match api.add_comment(task_id.unwrap().to_owned(), v.to_owned()) {
             Err(e) => println!("{}", e),
             Ok(t) => println!("{}", t),
         };
     }
-    if matches.is_present("task_id") {
-        if let Some(v) = api.project {
-            match api.add_task_to_project(task_id.unwrap(), v) {
+    if let Some(task_id) = matches.value_of("task_id"){
+        if let Some(v) = api.project.clone() {
+            match api.add_task_to_project(task_id.to_owned(), v.to_owned()) {
                 Ok(task) => println!("{}", task),
                 Err(e) => println!("{}", e)
             }
@@ -236,7 +241,7 @@ fn main() {
         }
     }
     if matches.is_present("task_id") && !matches.is_present("create") && !matches.is_present("update") {
-        match api.task(task_id.unwrap()) {
+        match api.task(task_id.unwrap().to_owned()) {
             Ok(task) => println!("{}", task),
             Err(e) => println!("{}", e)
         }

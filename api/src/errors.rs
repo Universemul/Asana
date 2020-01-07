@@ -19,7 +19,7 @@ impl From<reqwest::Error> for ApiError {
         };
         ApiError {
             code: c,
-            message: err.description().to_string()
+            message: err.description().to_owned()
         }
     }
 }
